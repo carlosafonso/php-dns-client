@@ -33,4 +33,27 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
 
         $this->serializer->serializeRequest($request);
     }
+
+    public function testDeserializeResponse()
+    {
+        $response = 'AA AA 81 80 00 01 00 01 00 00 00 00 07 65 78 61 6D 70 6C 65 03 63 6F 6D 00 00 01 00 01 C0 0C 00 01 00 01 00 00 18 4C 00 04 5D B8 D8 22';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(1, $records);
+        $this->assertEquals('example.com', $records[0]->getName());
+        $this->assertEquals(0x01, $records[0]->getType());
+        $this->assertEquals(6220, $records[0]->getTTL());
+        $this->assertEquals('93.184.216.34', $records[0]->getValue());
+    }
+
+    /*
+     * To-Do:
+     * - Test deserializing responses with the "label" format
+     */
 }
