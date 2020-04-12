@@ -40,7 +40,9 @@ class Serializer
         foreach ($labels as $label) {
             $labelLength = strlen($label);
             if ($labelLength > 63) {
-                throw new \InvalidArgumentException('At least one of the labels of the specified domain exceeds the allowed maximum length');
+                throw new \InvalidArgumentException(
+                    'At least one of the labels of the specified domain exceeds the allowed maximum length'
+                );
             }
             $qname = array_merge($qname, [$labelLength]);
             $qname = array_merge($qname, array_map('ord', str_split($label)));
