@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Afonso\Dns;
 
-use InvalidArgumentException;
-
 class RequestTest extends \PHPUnit\Framework\TestCase
 {
     /**
@@ -21,7 +19,7 @@ class RequestTest extends \PHPUnit\Framework\TestCase
 
     public function testCreatingAnInvalidRequest()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
 
         new Request('foo.com', 0xFFFF);
     }
