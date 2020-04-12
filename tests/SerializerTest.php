@@ -33,6 +33,4 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
 
         $this->serializer->serializeRequest($request);
     }
-
-    // To-Do: test that domains with labels greater than 63 chars throw errors
 }
