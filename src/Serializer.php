@@ -79,13 +79,13 @@ class Serializer
         $nsCount = ($bytes[8] << 8) | $bytes[9];
         $arCount = ($bytes[10] << 8) | $bytes[11];
 
-        // From now on there are variable-length fields, so we need to keep
-        // track of the current byte position.
-        $ptr = 12;
-
         $responseObj->setAuthoritative($isAuthoritative);
         $responseObj->setRecursionAvailable($isRecursionAvailable);
         $responseObj->setType($type);
+
+        // From now on there are variable-length fields, so we need to keep
+        // track of the current byte position.
+        $ptr = 12;
 
         /*
          * Question
@@ -110,21 +110,7 @@ class Serializer
          */
         for ($i = 0; $i < $anCount; $i++) {
             // NAME
-            $name = '';
-            $format = $bytes[$ptr] & 0xC0;
-            if ($format == 0xC0) { // Pointer format
-                $offset = ($bytes[$ptr++] << 8 | $bytes[$ptr++]) & 0x3F;
-                while ($bytes[$offset] > 0x00) {
-                    $labelLength = $bytes[$offset];
-                    $name .= implode('', array_map('chr', array_slice($bytes, $offset + 1, $labelLength))) . '.';
-                    $offset += $labelLength + 1;
-                }
-                $name = substr($name, 0, -1);
-            } elseif ($format == 0x00) {  // Label format
-                throw new \RuntimeException('Reading responses in label format is not implemented');
-            } else {
-                throw new \RuntimeException("Unrecognized format '${format}' in response");
-            }
+            [$ptr, $name] = $this->readLabels($bytes, $ptr);
 
             // TYPE
             $type = $bytes[$ptr++] << 8 | $bytes[$ptr++];
@@ -136,8 +122,17 @@ class Serializer
             $ttl = $bytes[$ptr++] << 24 | $bytes[$ptr++] << 16 | $bytes[$ptr++] << 8 | $bytes[$ptr++];
 
             // RDATA
-            $ptr += 2; // (RDLENGTH)
-            $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
+            $rdLength = $bytes[$ptr++] << 8 | $bytes[$ptr++];
+            switch ($type) {
+                case Request::RR_TYPE_A:
+                    $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
+                    break;
+                case Request::RR_TYPE_CNAME:
+                    [$ptr, $value] = $this->readLabels($bytes, $ptr);
+                    break;
+                default:
+                    throw new \RuntimeException("Reading responses for resource type '{$type}' is not implemented");
+            }
 
             $record = new ResourceRecord($name, $type, $ttl, $value);
             $responseObj->addResourceRecord($record);
@@ -154,5 +149,25 @@ class Serializer
         // Intentionally skipped
 
         return $responseObj;
+    }
+
+    private function readLabels(array $bytes, int $ptr): array
+    {
+        $labels = [];
+        $format = $bytes[$ptr] & 0xC0;
+        if ($format == 0xC0) { // Pointer format
+            $offset = ($bytes[$ptr++] << 8 | $bytes[$ptr++]) & 0x3F;
+            while ($bytes[$offset] > 0x00) {
+                $labelLength = $bytes[$offset];
+                $labels[] = implode('', array_map('chr', array_slice($bytes, $offset + 1, $labelLength)));
+                $offset += $labelLength + 1;
+            }
+        } elseif ($format == 0x00) {  // Label format
+            throw new \RuntimeException('Reading responses in label format is not implemented');
+        } else {
+            throw new \RuntimeException("Unrecognized format '${format}' in response");
+        }
+
+        return [$ptr, implode('.', $labels)];
     }
 }
