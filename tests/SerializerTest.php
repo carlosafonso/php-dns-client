@@ -72,6 +72,36 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('example.com', $records[0]->getValue());
     }
 
+    public function testDeserializeResponseWithMxRecords()
+    {
+        $response = '00 f7 81 80 00 01 00 05 00 00 00 01 06 67 6f 6f'
+            . '67 6c 65 03 63 6f 6d 00 00 0f 00 01 c0 0c 00 0f'
+            . '00 01 00 00 02 19 00 0c 00 0a 05 61 73 70 6d 78'
+            . '01 6c c0 0c c0 0c 00 0f 00 01 00 00 02 19 00 09'
+            . '00 1e 04 61 6c 74 32 c0 2a c0 0c 00 0f 00 01 00'
+            . '00 02 19 00 09 00 14 04 61 6c 74 31 c0 2a c0 0c'
+            . '00 0f 00 01 00 00 02 19 00 09 00 28 04 61 6c 74'
+            . '33 c0 2a c0 0c 00 0f 00 01 00 00 02 19 00 09 00'
+            . '32 04 61 6c 74 34 c0 2a 00 00 29 02 00 00 00 00'
+            . '00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(5, $records);
+        $this->assertEquals(0x0F, $records[0]->getType());
+        $this->assertEquals(537, $records[0]->getTTL());
+        $this->assertEquals('10 aspmx.l.google.com', $records[0]->getValue());
+        $this->assertEquals('30 alt2.aspmx.l.google.com', $records[1]->getValue());
+        $this->assertEquals('20 alt1.aspmx.l.google.com', $records[2]->getValue());
+        $this->assertEquals('40 alt3.aspmx.l.google.com', $records[3]->getValue());
+        $this->assertEquals('50 alt4.aspmx.l.google.com', $records[4]->getValue());
+    }
+
     /*
      * To-Do:
      * - Test deserializing responses with the "label" format

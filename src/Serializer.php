@@ -110,7 +110,7 @@ class Serializer
          */
         for ($i = 0; $i < $anCount; $i++) {
             // NAME
-            [$ptr, $name] = $this->readLabels($bytes, $ptr);
+            [$ptr, $name] = $this->readNameField($bytes, $ptr);
 
             // TYPE
             $type = $bytes[$ptr++] << 8 | $bytes[$ptr++];
@@ -128,7 +128,12 @@ class Serializer
                     $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
                     break;
                 case Request::RR_TYPE_CNAME:
-                    [$ptr, $value] = $this->readLabels($bytes, $ptr);
+                    [$ptr, $value] = $this->readNameField($bytes, $ptr);
+                    break;
+                case Request::RR_TYPE_MX:
+                    $preference = $bytes[$ptr++] << 8 | $bytes[$ptr++];
+                    [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);
+                    $value = "{$preference} {$exchanger}";
                     break;
                 default:
                     throw new \RuntimeException("Reading responses for resource type '{$type}' is not implemented");
@@ -151,21 +156,31 @@ class Serializer
         return $responseObj;
     }
 
-    private function readLabels(array $bytes, int $ptr): array
+    private function readNameField(array $bytes, int $ptr): array
     {
-        $labels = [];
-        $format = $bytes[$ptr] & 0xC0;
-        if ($format == 0xC0) { // Pointer format
-            $offset = ($bytes[$ptr++] << 8 | $bytes[$ptr++]) & 0x3F;
-            while ($bytes[$offset] > 0x00) {
-                $labelLength = $bytes[$offset];
-                $labels[] = implode('', array_map('chr', array_slice($bytes, $offset + 1, $labelLength)));
-                $offset += $labelLength + 1;
+        while (true) {
+            // Zero byte means we hit end of name field. Break the loop.
+            if ($bytes[$ptr] == 0) {
+                $ptr++;
+                break;
             }
-        } elseif ($format == 0x00) {  // Label format
-            throw new \RuntimeException('Reading responses in label format is not implemented');
-        } else {
-            throw new \RuntimeException("Unrecognized format '${format}' in response");
+
+            $format = $bytes[$ptr] & 0xC0;
+            $length = $offset = 0;
+
+            if ($format == 0xC0) { // Pointer format
+                $offset = ($bytes[$ptr++] << 8 | $bytes[$ptr++]) & 0x3F;
+                [$_, $label] = $this->readNameField($bytes, $offset);
+                $labels[] = $label;
+                // Pointer ends the name field. Break the loop.
+                break;
+            } elseif ($format == 0x00) {  // Label format
+                $length = $bytes[$ptr++] & 0x3F;
+                $labels[] = implode('', array_map('chr', array_slice($bytes, $ptr, $length)));
+                $ptr += $length;
+            } else {
+                throw new \RuntimeException("Unrecognized format '${format}' in response");
+            }
         }
 
         return [$ptr, implode('.', $labels)];
