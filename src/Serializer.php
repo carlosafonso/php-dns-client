@@ -127,6 +127,9 @@ class Serializer
                 case Request::RR_TYPE_A:
                     $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
                     break;
+                case Request::RR_TYPE_NS:
+                    [$ptr, $value] = $this->readNameField($bytes, $ptr);
+                    break;
                 case Request::RR_TYPE_CNAME:
                     [$ptr, $value] = $this->readNameField($bytes, $ptr);
                     break;

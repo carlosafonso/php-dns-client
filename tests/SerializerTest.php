@@ -52,6 +52,29 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('93.184.216.34', $records[0]->getValue());
     }
 
+    public function testDeserializeResponseWithNsRecords()
+    {
+        $response = '47 d6 81 80 00 01 00 02 00 00 00 01 07 65 78 61'
+            . '6d 70 6c 65 03 63 6f 6d 00 00 02 00 01 c0 0c 00'
+            . '02 00 01 00 00 1f 1b 00 14 01 61 0c 69 61 6e 61'
+            . '2d 73 65 72 76 65 72 73 03 6e 65 74 00 c0 0c 00'
+            . '02 00 01 00 00 1f 1b 00 04 01 62 c0 2b 00 00 29'
+            . '02 00 00 00 00 00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(2, $records);
+        $this->assertEquals(0x02, $records[0]->getType());
+        $this->assertEquals(7963, $records[0]->getTTL());
+        $this->assertEquals('a.iana-servers.net', $records[0]->getValue());
+        $this->assertEquals('b.iana-servers.net', $records[1]->getValue());
+    }
+
     public function testDeserializeResponseWithAaaaRecord()
     {
         $response = 'e3 19 81 80 00 01 00 01 00 00 00 01 07 65 78 61'
