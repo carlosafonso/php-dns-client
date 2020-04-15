@@ -135,6 +135,13 @@ class Serializer
                     [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);
                     $value = "{$preference} {$exchanger}";
                     break;
+                case Request::RR_TYPE_AAAA:
+                    $packed = '';
+                    for ($i = 0; $i < 16; $i++) {
+                        $packed .= chr($bytes[$ptr++]);
+                    }
+                    $value = inet_ntop($packed);
+                    break;
                 default:
                     throw new \RuntimeException("Reading responses for resource type '{$type}' is not implemented");
             }

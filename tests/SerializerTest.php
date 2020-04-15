@@ -52,6 +52,27 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('93.184.216.34', $records[0]->getValue());
     }
 
+    public function testDeserializeResponseWithAaaaRecord()
+    {
+        $response = 'e3 19 81 80 00 01 00 01 00 00 00 01 07 65 78 61'
+            . '6d 70 6c 65 03 63 6f 6d 00 00 1c 00 01 c0 0c 00'
+            . '1c 00 01 00 00 4c 25 00 10 26 06 28 00 02 20 00'
+            . '01 02 48 18 93 25 c8 19 46 00 00 29 10 00 00 00'
+            . '00 00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(1, $records);
+        $this->assertEquals('example.com', $records[0]->getName());
+        $this->assertEquals(0x1C, $records[0]->getType());
+        $this->assertEquals(19493, $records[0]->getTTL());
+        $this->assertEquals('2606:2800:220:1:248:1893:25c8:1946', $records[0]->getValue());
+    }
+
     public function testDeserializeResponseWithCnameRecord()
     {
         $response = 'cc 5a 81 80 00 01 00 01 00 00 00 01 03 77 77 77'
