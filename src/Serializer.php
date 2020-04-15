@@ -133,6 +133,9 @@ class Serializer
                 case Request::RR_TYPE_CNAME:
                     [$ptr, $value] = $this->readNameField($bytes, $ptr);
                     break;
+                case Request::RR_TYPE_PTR:
+                    [$ptr, $value] = $this->readNameField($bytes, $ptr);
+                    break;
                 case Request::RR_TYPE_MX:
                     $preference = $bytes[$ptr++] << 8 | $bytes[$ptr++];
                     [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);

@@ -116,6 +116,27 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('example.com', $records[0]->getValue());
     }
 
+    public function testDeserializeResponseWithPtrRecords()
+    {
+        $response = '21 5e 81 80 00 01 00 01 00 00 00 01 01 38 01 38'
+            . '01 38 01 38 07 69 6e 2d 61 64 64 72 04 61 72 70'
+            . '61 00 00 0c 00 01 c0 0c 00 0c 00 01 00 00 08 d6'
+            . '00 0c 03 64 6e 73 06 67 6f 6f 67 6c 65 00 00 00'
+            . '29 02 00 00 00 00 00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(1, $records);
+        $this->assertEquals(0x0C, $records[0]->getType());
+        $this->assertEquals(2262, $records[0]->getTTL());
+        $this->assertEquals('dns.google', $records[0]->getValue());
+    }
+
     public function testDeserializeResponseWithMxRecords()
     {
         $response = '00 f7 81 80 00 01 00 05 00 00 00 01 06 67 6f 6f'
