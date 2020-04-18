@@ -74,10 +74,10 @@ class Serializer
         $isRecursionAvailable = (bool) ($bytes[3] & 0x80);
         $type = $bytes[3] & 0x0F;
 
-        $qdCount = ($bytes[4] << 8) | $bytes[5];
-        $anCount = ($bytes[6] << 8) | $bytes[7];
-        $nsCount = ($bytes[8] << 8) | $bytes[9];
-        $arCount = ($bytes[10] << 8) | $bytes[11];
+        [$_, $qdCount] = $this->readInt($bytes, 4, 2);
+        [$_, $anCount] = $this->readInt($bytes, 6, 2);
+        [$_, $nsCount] = $this->readInt($bytes, 8, 2);
+        [$_, $arCount] = $this->readInt($bytes, 10, 2);
 
         $responseObj->setAuthoritative($isAuthoritative);
         $responseObj->setRecursionAvailable($isRecursionAvailable);
@@ -113,16 +113,16 @@ class Serializer
             [$ptr, $name] = $this->readNameField($bytes, $ptr);
 
             // TYPE
-            $type = $bytes[$ptr++] << 8 | $bytes[$ptr++];
+            [$ptr, $type] = $this->readInt($bytes, $ptr, 2);
 
             // CLASS
             $ptr += 2;
 
             // TTL
-            $ttl = $bytes[$ptr++] << 24 | $bytes[$ptr++] << 16 | $bytes[$ptr++] << 8 | $bytes[$ptr++];
+            [$ptr, $ttl] = $this->readInt($bytes, $ptr, 4);
 
             // RDATA
-            $rdLength = $bytes[$ptr++] << 8 | $bytes[$ptr++];
+            [$ptr, $rdLength] = $this->readInt($bytes, $ptr, 2);
             switch ($type) {
                 case Request::RR_TYPE_A:
                     $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
@@ -136,17 +136,11 @@ class Serializer
                 case Request::RR_TYPE_SOA:
                     [$ptr, $primaryNs] = $this->readNameField($bytes, $ptr);
                     [$ptr, $adminMb] = $this->readNameField($bytes, $ptr);
-                    $serialNo = $bytes[$ptr++] << 24 | $bytes[$ptr++] << 16 | $bytes[$ptr++] << 8 | $bytes[$ptr++];
-                    $refreshInterval = $bytes[$ptr++] << 24
-                        | $bytes[$ptr++] << 16
-                        | $bytes[$ptr++] << 8
-                        | $bytes[$ptr++];
-                    $retryInterval = $bytes[$ptr++] << 24 | $bytes[$ptr++] << 16 | $bytes[$ptr++] << 8 | $bytes[$ptr++];
-                    $expirationLimit = $bytes[$ptr++] << 24
-                        | $bytes[$ptr++] << 16
-                        | $bytes[$ptr++] << 8
-                        | $bytes[$ptr++];
-                    $minimumTtl = $bytes[$ptr++] << 24 | $bytes[$ptr++] << 16 | $bytes[$ptr++] << 8 | $bytes[$ptr++];
+                    [$ptr, $serialNo] = $this->readInt($bytes, $ptr, 4);
+                    [$ptr, $refreshInterval] = $this->readInt($bytes, $ptr, 4);
+                    [$ptr, $retryInterval] = $this->readInt($bytes, $ptr, 4);
+                    [$ptr, $expirationLimit] = $this->readInt($bytes, $ptr, 4);
+                    [$ptr, $minimumTtl] = $this->readInt($bytes, $ptr, 4);
                     $value = "{$primaryNs} {$adminMb} {$serialNo} {$refreshInterval}"
                         . " {$retryInterval} {$expirationLimit} {$minimumTtl}";
                     break;
@@ -154,7 +148,7 @@ class Serializer
                     [$ptr, $value] = $this->readNameField($bytes, $ptr);
                     break;
                 case Request::RR_TYPE_MX:
-                    $preference = $bytes[$ptr++] << 8 | $bytes[$ptr++];
+                    [$ptr, $preference] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);
                     $value = "{$preference} {$exchanger}";
                     break;
@@ -214,5 +208,25 @@ class Serializer
         }
 
         return [$ptr, implode('.', $labels)];
+    }
+
+    /**
+     * Reads and returns an integer from the given byte array, at the specified
+     * offset and with the specified length in bytes.
+     *
+     * @param int[] $byteArray
+     * @param int $ptr
+     * @param int $bytes
+     * @return int[] An array of size 2, the first item being the updated
+     * pointer (after the read operation) and the second item being the actual
+     * integer that was read.
+     */
+    private function readInt(array $byteArray, int $ptr, int $bytes): array
+    {
+        $int = 0;
+        for ($i = $bytes - 1; $i >= 0; $i--) {
+            $int |= $byteArray[$ptr++] << 8 * $i;
+        }
+        return [$ptr, $int];
     }
 }
