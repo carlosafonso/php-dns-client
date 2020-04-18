@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Afonso\Dns;
 
-class Serializer
+class Serializer implements SerializerInterface
 {
     public function serializeRequest(Request $request): string
     {
