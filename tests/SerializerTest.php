@@ -116,6 +116,29 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('example.com', $records[0]->getValue());
     }
 
+    public function testDeserializeResponseWithSoaRecord()
+    {
+        $response = 'aa f0 81 80 00 01 00 01 00 00 00 01 06 61 6d 61'
+            . '7a 6f 6e 03 63 6f 6d 00 00 06 00 01 c0 0c 00 06'
+            . '00 01 00 00 03 83 00 31 13 64 6e 73 2d 65 78 74'
+            . '65 72 6e 61 6c 2d 6d 61 73 74 65 72 c0 0c 04 72'
+            . '6f 6f 74 c0 0c 77 d0 13 0b 00 00 00 b4 00 00 00'
+            . '3c 00 2e 24 80 00 00 00 3c 00 00 29 02 00 00 00'
+            . '00 00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(1, $records);
+        $this->assertEquals(0x06, $records[0]->getType());
+        $this->assertEquals(899, $records[0]->getTTL());
+        $this->assertEquals('dns-external-master.amazon.com root.amazon.com 2010125067 180 60 3024000 60', $records[0]->getValue());
+    }
+
     public function testDeserializeResponseWithPtrRecords()
     {
         $response = '21 5e 81 80 00 01 00 01 00 00 00 01 01 38 01 38'
