@@ -128,9 +128,8 @@ class Serializer
                     $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
                     break;
                 case Request::RR_TYPE_NS:
-                    [$ptr, $value] = $this->readNameField($bytes, $ptr);
-                    break;
                 case Request::RR_TYPE_CNAME:
+                case Request::RR_TYPE_PTR:
                     [$ptr, $value] = $this->readNameField($bytes, $ptr);
                     break;
                 case Request::RR_TYPE_SOA:
@@ -143,9 +142,6 @@ class Serializer
                     [$ptr, $minimumTtl] = $this->readInt($bytes, $ptr, 4);
                     $value = "{$primaryNs} {$adminMb} {$serialNo} {$refreshInterval}"
                         . " {$retryInterval} {$expirationLimit} {$minimumTtl}";
-                    break;
-                case Request::RR_TYPE_PTR:
-                    [$ptr, $value] = $this->readNameField($bytes, $ptr);
                     break;
                 case Request::RR_TYPE_MX:
                     [$ptr, $preference] = $this->readInt($bytes, $ptr, 2);
