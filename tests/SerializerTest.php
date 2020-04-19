@@ -190,6 +190,45 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('50 alt4.aspmx.l.google.com', $records[4]->getValue());
     }
 
+    public function testDeserializeResponseWithSrvRecords()
+    {
+        $response = 'b5 8d 81 80 00 01 00 05 00 00 00 01 07 5f 6a 61'
+            . '62 62 65 72 04 5f 74 63 70 05 67 6d 61 69 6c 03'
+            . '63 6f 6d 00 00 21 00 01 c0 0c 00 21 00 01 00 00'
+            . '03 83 00 25 00 14 00 00 14 95 04 61 6c 74 34 0b'
+            . '78 6d 70 70 2d 73 65 72 76 65 72 01 6c 06 67 6f'
+            . '6f 67 6c 65 03 63 6f 6d 00 c0 0c 00 21 00 01 00'
+            . '00 03 83 00 25 00 14 00 00 14 95 04 61 6c 74 33'
+            . '0b 78 6d 70 70 2d 73 65 72 76 65 72 01 6c 06 67'
+            . '6f 6f 67 6c 65 03 63 6f 6d 00 c0 0c 00 21 00 01'
+            . '00 00 03 83 00 25 00 14 00 00 14 95 04 61 6c 74'
+            . '31 0b 78 6d 70 70 2d 73 65 72 76 65 72 01 6c 06'
+            . '67 6f 6f 67 6c 65 03 63 6f 6d 00 c0 0c 00 21 00'
+            . '01 00 00 03 83 00 25 00 14 00 00 14 95 04 61 6c'
+            . '74 32 0b 78 6d 70 70 2d 73 65 72 76 65 72 01 6c'
+            . '06 67 6f 6f 67 6c 65 03 63 6f 6d 00 c0 0c 00 21'
+            . '00 01 00 00 03 83 00 20 00 05 00 00 14 95 0b 78'
+            . '6d 70 70 2d 73 65 72 76 65 72 01 6c 06 67 6f 6f'
+            . '67 6c 65 03 63 6f 6d 00 00 00 29 02 00 00 00 00'
+            . '00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(5, $records);
+        $this->assertEquals(0x21, $records[0]->getType());
+        $this->assertEquals(899, $records[0]->getTTL());
+        $this->assertEquals('20 0 5269 alt4.xmpp-server.l.google.com', $records[0]->getValue());
+        $this->assertEquals('20 0 5269 alt3.xmpp-server.l.google.com', $records[1]->getValue());
+        $this->assertEquals('20 0 5269 alt1.xmpp-server.l.google.com', $records[2]->getValue());
+        $this->assertEquals('20 0 5269 alt2.xmpp-server.l.google.com', $records[3]->getValue());
+        $this->assertEquals('5 0 5269 xmpp-server.l.google.com', $records[4]->getValue());
+    }
+
     /*
      * To-Do:
      * - Test deserializing responses with the "label" format

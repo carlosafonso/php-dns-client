@@ -148,6 +148,13 @@ class Serializer implements SerializerInterface
                     [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);
                     $value = "{$preference} {$exchanger}";
                     break;
+                case Request::RR_TYPE_SRV:
+                    [$ptr, $priority] = $this->readInt($bytes, $ptr, 2);
+                    [$ptr, $weight] = $this->readInt($bytes, $ptr, 2);
+                    [$ptr, $port] = $this->readInt($bytes, $ptr, 2);
+                    [$ptr, $target] = $this->readNameField($bytes, $ptr);
+                    $value = "{$priority} {$weight} {$port} {$target}";
+                    break;
                 case Request::RR_TYPE_AAAA:
                     $packed = '';
                     for ($i = 0; $i < 16; $i++) {
