@@ -6,10 +6,7 @@ namespace Afonso\Dns;
 
 class RequestTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @dataProvider validTypesProvider
-     */
-    public function testCreatingAValidRequest($type)
+    public function testCreatingARequestWithValidType()
     {
         $request = new Request('foo.com', 0x0001);
 
@@ -17,26 +14,13 @@ class RequestTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x0001, $request->getType());
     }
 
-    public function testCreatingAnInvalidRequest()
+    public function testCreatingARequestWithInvalidType()
     {
         $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            "'65535' is not a valid DNS resource record type"
+        );
 
         new Request('foo.com', 0xFFFF);
-    }
-
-    public function validTypesProvider()
-    {
-        return [
-            [0x0001],
-            [0x0002],
-            [0x0005],
-            [0x0006],
-            [0x000B],
-            [0x000C],
-            [0x000F],
-            [0x0021],
-            [0x001C],
-            [0x00FF]
-        ];
     }
 }

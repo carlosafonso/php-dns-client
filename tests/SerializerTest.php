@@ -15,7 +15,7 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
 
     public function testSerializeRequest()
     {
-        $request = new Request('example.com', Request::RR_TYPE_A);
+        $request = new Request('example.com', ResourceRecord::TYPE_A);
 
         $serialized = $this->serializer->serializeRequest($request);
 
@@ -29,7 +29,7 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('At least one of the labels of the specified domain exceeds the allowed maximum length');
 
-        $request = new Request('this-is-a-domain-name-which-certainly-has-grown-a-bit-too-large-hasnt-it.com', Request::RR_TYPE_A);
+        $request = new Request('this-is-a-domain-name-which-certainly-has-grown-a-bit-too-large-hasnt-it.com', ResourceRecord::TYPE_A);
 
         $this->serializer->serializeRequest($request);
     }

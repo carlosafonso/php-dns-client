@@ -124,15 +124,15 @@ class Serializer implements SerializerInterface
             // RDATA
             [$ptr, $rdLength] = $this->readInt($bytes, $ptr, 2);
             switch ($type) {
-                case Request::RR_TYPE_A:
+                case ResourceRecord::TYPE_A:
                     $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
                     break;
-                case Request::RR_TYPE_NS:
-                case Request::RR_TYPE_CNAME:
-                case Request::RR_TYPE_PTR:
+                case ResourceRecord::TYPE_NS:
+                case ResourceRecord::TYPE_CNAME:
+                case ResourceRecord::TYPE_PTR:
                     [$ptr, $value] = $this->readNameField($bytes, $ptr);
                     break;
-                case Request::RR_TYPE_SOA:
+                case ResourceRecord::TYPE_SOA:
                     [$ptr, $primaryNs] = $this->readNameField($bytes, $ptr);
                     [$ptr, $adminMb] = $this->readNameField($bytes, $ptr);
                     [$ptr, $serialNo] = $this->readInt($bytes, $ptr, 4);
@@ -143,19 +143,19 @@ class Serializer implements SerializerInterface
                     $value = "{$primaryNs} {$adminMb} {$serialNo} {$refreshInterval}"
                         . " {$retryInterval} {$expirationLimit} {$minimumTtl}";
                     break;
-                case Request::RR_TYPE_MX:
+                case ResourceRecord::TYPE_MX:
                     [$ptr, $preference] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);
                     $value = "{$preference} {$exchanger}";
                     break;
-                case Request::RR_TYPE_SRV:
+                case ResourceRecord::TYPE_SRV:
                     [$ptr, $priority] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $weight] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $port] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $target] = $this->readNameField($bytes, $ptr);
                     $value = "{$priority} {$weight} {$port} {$target}";
                     break;
-                case Request::RR_TYPE_AAAA:
+                case ResourceRecord::TYPE_AAAA:
                     $packed = '';
                     for ($i = 0; $i < 16; $i++) {
                         $packed .= chr($bytes[$ptr++]);
