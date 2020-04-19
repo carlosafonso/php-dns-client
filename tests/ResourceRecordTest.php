@@ -6,6 +6,20 @@ namespace Afonso\Dns;
 
 class ResourceRecordTest extends \PHPUnit\Framework\TestCase
 {
+    public function testGetName()
+    {
+        $record = $this->getMockForAbstractClass(ResourceRecord::class, ['example.com', 123]);
+
+        $this->assertEquals('example.com', $record->getName());
+    }
+
+    public function testGetTtl()
+    {
+        $record = $this->getMockForAbstractClass(ResourceRecord::class, ['example.com', 123]);
+
+        $this->assertEquals(123, $record->getTtl());
+    }
+
     /**
      * @dataProvider validTypesProvider
      */

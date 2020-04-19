@@ -39,12 +39,13 @@ require __DIR__ . '/vendor/autoload.php';
 $client = new Afonso\Dns\Client();
 
 // Let's make an A request for example.com
-$request = new Afonso\Dns\Request('google.com', Afonso\Dns\Request::RR_TYPE_A);
+$request = new Afonso\Dns\Request('google.com', Afonso\Dns\ResourceRecord::TYPE_A);
 
 // Let's send it to name server 8.8.8.8
 $response = $client->query($request, '8.8.8.8');
 
-$response->getResourceRecords()[0]->getValue(); // 216.58.211.238
+$response->getResourceRecords()[0]; // Instance of AResourceRecord
+$response->getResourceRecords()[0]->__toString(); // "216.58.211.238"
 ```
 
 ## Security

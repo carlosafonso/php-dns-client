@@ -34,7 +34,7 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->serializer->serializeRequest($request);
     }
 
-    public function testDeserializeResponse()
+    public function testDeserializeResponseWithARecords()
     {
         $response = 'AA AA 81 80 00 01 00 01 00 00 00 00 07 65 78 61 6D 70 6C 65 03 63 6F 6D 00 00 01 00 01 C0 0C 00 01 00 01 00 00 18 4C 00 04 5D B8 D8 22';
         $response = hex2bin(str_replace(' ', '', $response));
@@ -46,10 +46,10 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(1, $records);
+        $this->assertInstanceOf(AResourceRecord::class, $records[0]);
         $this->assertEquals('example.com', $records[0]->getName());
-        $this->assertEquals(0x01, $records[0]->getType());
         $this->assertEquals(6220, $records[0]->getTTL());
-        $this->assertEquals('93.184.216.34', $records[0]->getValue());
+        $this->assertEquals('93.184.216.34', (string) $records[0]);
     }
 
     public function testDeserializeResponseWithNsRecords()
@@ -69,31 +69,10 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(2, $records);
-        $this->assertEquals(0x02, $records[0]->getType());
+        $this->assertInstanceOf(NsResourceRecord::class, $records[0]);
         $this->assertEquals(7963, $records[0]->getTTL());
-        $this->assertEquals('a.iana-servers.net', $records[0]->getValue());
-        $this->assertEquals('b.iana-servers.net', $records[1]->getValue());
-    }
-
-    public function testDeserializeResponseWithAaaaRecord()
-    {
-        $response = 'e3 19 81 80 00 01 00 01 00 00 00 01 07 65 78 61'
-            . '6d 70 6c 65 03 63 6f 6d 00 00 1c 00 01 c0 0c 00'
-            . '1c 00 01 00 00 4c 25 00 10 26 06 28 00 02 20 00'
-            . '01 02 48 18 93 25 c8 19 46 00 00 29 10 00 00 00'
-            . '00 00 00 00';
-        $response = hex2bin(str_replace(' ', '', $response));
-
-        $response = $this->serializer->deserializeResponse($response);
-        $this->assertFalse($response->isAuthoritative());
-        $this->assertTrue($response->isRecursionAvailable());
-        $this->assertEquals(0x00, $response->getType());
-        $records = $response->getResourceRecords();
-        $this->assertCount(1, $records);
-        $this->assertEquals('example.com', $records[0]->getName());
-        $this->assertEquals(0x1C, $records[0]->getType());
-        $this->assertEquals(19493, $records[0]->getTTL());
-        $this->assertEquals('2606:2800:220:1:248:1893:25c8:1946', $records[0]->getValue());
+        $this->assertEquals('a.iana-servers.net', (string) $records[0]);
+        $this->assertEquals('b.iana-servers.net', (string) $records[1]);
     }
 
     public function testDeserializeResponseWithCnameRecord()
@@ -111,9 +90,9 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(1, $records);
-        $this->assertEquals(0x05, $records[0]->getType());
+        $this->assertInstanceOf(CnameResourceRecord::class, $records[0]);
         $this->assertEquals(3599, $records[0]->getTTL());
-        $this->assertEquals('example.com', $records[0]->getValue());
+        $this->assertEquals('example.com', (string) $records[0]);
     }
 
     public function testDeserializeResponseWithSoaRecord()
@@ -134,9 +113,12 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(1, $records);
-        $this->assertEquals(0x06, $records[0]->getType());
+        $this->assertInstanceOf(SoaResourceRecord::class, $records[0]);
         $this->assertEquals(899, $records[0]->getTTL());
-        $this->assertEquals('dns-external-master.amazon.com root.amazon.com 2010125067 180 60 3024000 60', $records[0]->getValue());
+        $this->assertEquals(
+            'dns-external-master.amazon.com root.amazon.com 2010125067 180 60 3024000 60',
+            (string) $records[0]
+        );
     }
 
     public function testDeserializeResponseWithPtrRecords()
@@ -155,9 +137,9 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(1, $records);
-        $this->assertEquals(0x0C, $records[0]->getType());
+        $this->assertInstanceOf(PtrResourceRecord::class, $records[0]);
         $this->assertEquals(2262, $records[0]->getTTL());
-        $this->assertEquals('dns.google', $records[0]->getValue());
+        $this->assertEquals('dns.google', (string) $records[0]);
     }
 
     public function testDeserializeResponseWithMxRecords()
@@ -181,13 +163,13 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(5, $records);
-        $this->assertEquals(0x0F, $records[0]->getType());
+        $this->assertInstanceOf(MxResourceRecord::class, $records[0]);
         $this->assertEquals(537, $records[0]->getTTL());
-        $this->assertEquals('10 aspmx.l.google.com', $records[0]->getValue());
-        $this->assertEquals('30 alt2.aspmx.l.google.com', $records[1]->getValue());
-        $this->assertEquals('20 alt1.aspmx.l.google.com', $records[2]->getValue());
-        $this->assertEquals('40 alt3.aspmx.l.google.com', $records[3]->getValue());
-        $this->assertEquals('50 alt4.aspmx.l.google.com', $records[4]->getValue());
+        $this->assertEquals('10 aspmx.l.google.com', (string) $records[0]);
+        $this->assertEquals('30 alt2.aspmx.l.google.com', (string) $records[1]);
+        $this->assertEquals('20 alt1.aspmx.l.google.com', (string) $records[2]);
+        $this->assertEquals('40 alt3.aspmx.l.google.com', (string) $records[3]);
+        $this->assertEquals('50 alt4.aspmx.l.google.com', (string) $records[4]);
     }
 
     public function testDeserializeResponseWithSrvRecords()
@@ -220,13 +202,34 @@ class SerializerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0x00, $response->getType());
         $records = $response->getResourceRecords();
         $this->assertCount(5, $records);
-        $this->assertEquals(0x21, $records[0]->getType());
+        $this->assertInstanceOf(SrvResourceRecord::class, $records[0]);
         $this->assertEquals(899, $records[0]->getTTL());
-        $this->assertEquals('20 0 5269 alt4.xmpp-server.l.google.com', $records[0]->getValue());
-        $this->assertEquals('20 0 5269 alt3.xmpp-server.l.google.com', $records[1]->getValue());
-        $this->assertEquals('20 0 5269 alt1.xmpp-server.l.google.com', $records[2]->getValue());
-        $this->assertEquals('20 0 5269 alt2.xmpp-server.l.google.com', $records[3]->getValue());
-        $this->assertEquals('5 0 5269 xmpp-server.l.google.com', $records[4]->getValue());
+        $this->assertEquals('20 0 5269 alt4.xmpp-server.l.google.com', (string) $records[0]);
+        $this->assertEquals('20 0 5269 alt3.xmpp-server.l.google.com', (string) $records[1]);
+        $this->assertEquals('20 0 5269 alt1.xmpp-server.l.google.com', (string) $records[2]);
+        $this->assertEquals('20 0 5269 alt2.xmpp-server.l.google.com', (string) $records[3]);
+        $this->assertEquals('5 0 5269 xmpp-server.l.google.com', (string) $records[4]);
+    }
+
+    public function testDeserializeResponseWithAaaaRecord()
+    {
+        $response = 'e3 19 81 80 00 01 00 01 00 00 00 01 07 65 78 61'
+            . '6d 70 6c 65 03 63 6f 6d 00 00 1c 00 01 c0 0c 00'
+            . '1c 00 01 00 00 4c 25 00 10 26 06 28 00 02 20 00'
+            . '01 02 48 18 93 25 c8 19 46 00 00 29 10 00 00 00'
+            . '00 00 00 00';
+        $response = hex2bin(str_replace(' ', '', $response));
+
+        $response = $this->serializer->deserializeResponse($response);
+        $this->assertFalse($response->isAuthoritative());
+        $this->assertTrue($response->isRecursionAvailable());
+        $this->assertEquals(0x00, $response->getType());
+        $records = $response->getResourceRecords();
+        $this->assertCount(1, $records);
+        $this->assertInstanceOf(AaaaResourceRecord::class, $records[0]);
+        $this->assertEquals('example.com', $records[0]->getName());
+        $this->assertEquals(19493, $records[0]->getTTL());
+        $this->assertEquals('2606:2800:220:1:248:1893:25c8:1946', (string) $records[0]);
     }
 
     /*

@@ -59,7 +59,7 @@ class Response
         return $this->records;
     }
 
-    public function addResourceRecord(ResourceRecord $record): void
+    public function addResourceRecord(ResourceRecordInterface $record): void
     {
         $this->records[] = $record;
     }

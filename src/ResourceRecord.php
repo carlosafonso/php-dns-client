@@ -4,42 +4,82 @@ declare(strict_types=1);
 
 namespace Afonso\Dns;
 
-class ResourceRecord
+/**
+ * This class represents a DNS Resource Record.
+ */
+abstract class ResourceRecord implements ResourceRecordInterface
 {
+    /**
+     * @var int
+     */
     const TYPE_A = 0x0001;
+
+    /**
+     * @var int
+     */
     const TYPE_NS = 0x0002;
+
+    /**
+     * @var int
+     */
     const TYPE_CNAME = 0x0005;
+
+    /**
+     * @var int
+     */
     const TYPE_SOA = 0x0006;
+
+    /**
+     * @var int
+     */
     const TYPE_PTR = 0x000C;
+
+    /**
+     * @var int
+     */
     const TYPE_MX = 0x000F;
+
+    /**
+     * @var int
+     */
     const TYPE_SRV = 0x0021;
+
+    /**
+     * @var int
+     */
     const TYPE_AAAA = 0x001C;
+
+    /**
+     * @var int
+     */
     const TYPE_ANY = 0x00FF;
 
+    /**
+     * @var string
+     */
     protected $name;
 
+    /**
+     * @var int
+     */
     protected $type;
 
+    /**
+     * @var int
+     */
     protected $ttl;
 
-    protected $value;
-
-    public function __construct(string $name, int $type, int $ttl, string $value)
+    public function __construct(string $name, int $ttl)
     {
         $this->name = $name;
-        $this->type = $type;
         $this->ttl = $ttl;
-        $this->value = $value;
     }
+
+    abstract public function getType(): int;
 
     public function getName(): string
     {
         return $this->name;
-    }
-
-    public function getType(): int
-    {
-        return $this->type;
     }
 
     public function getTtl(): int
@@ -47,11 +87,13 @@ class ResourceRecord
         return $this->ttl;
     }
 
-    public function getValue(): string
-    {
-        return $this->value;
-    }
-
+    /**
+     * Return whether the specified value is a supported Resource Record type
+     * in this library.
+     *
+     * @param int $type
+     * @return bool
+     */
     public static function isValidType(int $type): bool
     {
         $validTypes = [

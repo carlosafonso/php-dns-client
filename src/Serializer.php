@@ -125,12 +125,20 @@ class Serializer implements SerializerInterface
             [$ptr, $rdLength] = $this->readInt($bytes, $ptr, 2);
             switch ($type) {
                 case ResourceRecord::TYPE_A:
-                    $value = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
+                    $address = $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++] . '.' . $bytes[$ptr++];
+                    $record = new AResourceRecord($name, $ttl, $address);
                     break;
                 case ResourceRecord::TYPE_NS:
+                    [$ptr, $nameserver] = $this->readNameField($bytes, $ptr);
+                    $record = new NsResourceRecord($name, $ttl, $nameserver);
+                    break;
                 case ResourceRecord::TYPE_CNAME:
+                    [$ptr, $canonicalName] = $this->readNameField($bytes, $ptr);
+                    $record= new CnameResourceRecord($name, $ttl, $canonicalName);
+                    break;
                 case ResourceRecord::TYPE_PTR:
-                    [$ptr, $value] = $this->readNameField($bytes, $ptr);
+                    [$ptr, $targetName] = $this->readNameField($bytes, $ptr);
+                    $record = new PtrResourceRecord($name, $ttl, $targetName);
                     break;
                 case ResourceRecord::TYPE_SOA:
                     [$ptr, $primaryNs] = $this->readNameField($bytes, $ptr);
@@ -140,33 +148,42 @@ class Serializer implements SerializerInterface
                     [$ptr, $retryInterval] = $this->readInt($bytes, $ptr, 4);
                     [$ptr, $expirationLimit] = $this->readInt($bytes, $ptr, 4);
                     [$ptr, $minimumTtl] = $this->readInt($bytes, $ptr, 4);
-                    $value = "{$primaryNs} {$adminMb} {$serialNo} {$refreshInterval}"
-                        . " {$retryInterval} {$expirationLimit} {$minimumTtl}";
+                    $record = new SoaResourceRecord(
+                        $name,
+                        $ttl,
+                        $primaryNs,
+                        $adminMb,
+                        $serialNo,
+                        $refreshInterval,
+                        $retryInterval,
+                        $expirationLimit,
+                        $minimumTtl
+                    );
                     break;
                 case ResourceRecord::TYPE_MX:
                     [$ptr, $preference] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $exchanger] = $this->readNameField($bytes, $ptr);
-                    $value = "{$preference} {$exchanger}";
+                    $record= new MxResourceRecord($name, $ttl, $preference, $exchanger);
                     break;
                 case ResourceRecord::TYPE_SRV:
                     [$ptr, $priority] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $weight] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $port] = $this->readInt($bytes, $ptr, 2);
                     [$ptr, $target] = $this->readNameField($bytes, $ptr);
-                    $value = "{$priority} {$weight} {$port} {$target}";
+                    $record = new SrvResourceRecord($name, $ttl, $priority, $weight, $port, $target);
                     break;
                 case ResourceRecord::TYPE_AAAA:
                     $packed = '';
                     for ($i = 0; $i < 16; $i++) {
                         $packed .= chr($bytes[$ptr++]);
                     }
-                    $value = inet_ntop($packed);
+                    $address = inet_ntop($packed);
+                    $record = new AaaaResourceRecord($name, $ttl, $address);
                     break;
                 default:
                     throw new \RuntimeException("Reading responses for resource type '{$type}' is not implemented");
             }
 
-            $record = new ResourceRecord($name, $type, $ttl, $value);
             $responseObj->addResourceRecord($record);
         }
 
