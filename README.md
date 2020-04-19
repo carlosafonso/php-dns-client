@@ -8,7 +8,18 @@
 
 A DNS client library purely implemented in PHP, compatible with PHP 7.2+.
 
-**This is a work in progress.**
+**This is a work in progress.** These are the Resource Record types currently understood by the library:
+
+* A
+* AAAA
+* CNAME
+* NS
+* SRV
+* MX
+* SOA
+* PTR
+
+Processing responses with other types of Resource Records currently will result in an exception.
 
 ## Install
 
