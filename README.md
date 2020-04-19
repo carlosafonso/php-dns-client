@@ -10,6 +10,36 @@ A DNS client library purely implemented in PHP, compatible with PHP 7.2+.
 
 **This is a work in progress.**
 
+## Install
+
+Via Composer:
+
+``` bash
+$ composer require carlosafonso/php-dns-client
+```
+
+## Usage
+
+The `Client` class it the main entry point to consume the library. `Client` instances allow to send `Request` objects to a name server for resolution using the `query()` method:
+
+``` php
+require __DIR__ . '/vendor/autoload.php';
+
+$client = new Afonso\Dns\Client();
+
+// Let's make an A request for example.com
+$request = new Afonso\Dns\Request('google.com', Afonso\Dns\Request::RR_TYPE_A);
+
+// Let's send it to name server 8.8.8.8
+$response = $client->query($request, '8.8.8.8');
+
+$response->getResourceRecords()[0]->getValue(); // 216.58.211.238
+```
+
+## Security
+
+If you discover any security related issues, please email the author directly instead of using the issue tracker.
+
 [ico-version]: https://img.shields.io/packagist/v/carlosafonso/php-dns-client.svg?style=flat-square
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 [ico-travis]: https://img.shields.io/travis/carlosafonso/php-dns-client/master.svg?style=flat-square
