@@ -6,6 +6,13 @@ namespace Afonso\Dns;
 
 class ResponseTest extends \PHPUnit\Framework\TestCase
 {
+    public function testGetResourceRecordsReturnsEmptyArrayByDefault()
+    {
+        $response = new Response();
+
+        $this->assertCount(0, $response->getResourceRecords());
+    }
+
     /**
      * @dataProvider validTypesProvider
      */

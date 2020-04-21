@@ -19,7 +19,7 @@ class Response
 
     protected $type;
 
-    protected $records;
+    protected $records = [];
 
     public function isAuthoritative(): bool
     {
